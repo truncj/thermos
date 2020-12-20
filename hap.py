@@ -11,7 +11,7 @@ class Thermostat(Accessory):
     @classmethod
     def _gpio_setup(_cls, pin):
         if GPIO.getmode() is None:
-            GPIO.setmode(GPIO.BOARD)
+            GPIO.setmode(GPIO.BCM)
         GPIO.setup(pin, GPIO.OUT)
 
     def __init__(self, *args, pin=23, **kwargs):
