@@ -31,13 +31,14 @@ class Thermostat(Accessory):
         # Default unit to Fahrenheit (change to 0 for Celcius)
         temp_service.configure_char('TemperatureDisplayUnits', value=1)
 
-        self.pin = pin
-
         # Having a callback is optional, but you can use it to add functionality.
         self.temp_target.setter_callback = self.temperature_target_changed
         self.temp_current.setter_callback = self.temperature_current_changed
         self.target_state.setter_callback = self.target_state_changed
         # self.current_state.setter_callback = self.current_state_changed
+
+        self.pin = pin
+        self._gpio_setup(pin)
 
     def target_state_changed(self, value):
         """This will be called every time the value of the CurrentTemperature
