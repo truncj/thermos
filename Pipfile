@@ -14,7 +14,7 @@ redis = "==3.5.3"
 six = "==1.15.0"
 zeroconf = "==0.28.7"
 HAP-python = "==3.1.0"
-"RPi.GPIO" = "*"
+"RPi.GPIO" = "==0.7.0"
 
 [dev-packages]
 
