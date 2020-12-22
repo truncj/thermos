@@ -34,4 +34,3 @@ jobs:
           push: true
           tags: |
             ghcr.io/truncj/thermos:latest
-            ghcr.io/truncj/thermos:0.0.1
