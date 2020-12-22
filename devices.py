@@ -44,7 +44,7 @@ class Thermostat(Accessory):
 
         # initialize redis connection per device
         self.r = redis.Redis(
-            host='192.168.1.236',
+            host='redis',
             port=6379,
             password='',
             decode_responses=True)
