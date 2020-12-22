@@ -3,13 +3,20 @@ services:
   thermos:
     container_name: thermos
     image: ghcr.io/truncj/thermos:latest
+    restart: always
+    privileged: true
     volumes:
       - ./config:/config
     environment:
       - PYTHONUNBUFFERED=1
       - DEBUG=1
+    network_mode: host
   redis:
     container_name: redis
+    command: [ "redis-server", "--appendonly", "yes" ]
     image: "redis:alpine"
-    ports:
-      - "6379:6379"
+    restart: always
+    volumes:
+      - ./redis-data:/data
+    network_mode: host
+

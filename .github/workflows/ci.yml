@@ -6,7 +6,7 @@ on:
 
 jobs:
   docker-build-push:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       -
         name: Checkout
@@ -25,12 +25,25 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
       -
-        name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/arm/v7
-          push: true
-          tags: |
-            ghcr.io/truncj/thermos:latest
+        name: Build
+        run: docker build -t ghcr.io/truncj/thermos .
+      -
+        name: Tag
+        run: |
+          docker tag ghcr.io/truncj/thermos ghcr.io/truncj/thermos:latest
+          docker tag ghcr.io/truncj/thermos ghcr.io/truncj/thermos:${{ github.sha }}
+      -
+        name: Push
+        run: |
+          docker push ghcr.io/truncj/thermos:${{ github.sha }}
+          docker push ghcr.io/truncj/thermos:latest
+
+#        name: Build and push
+#        uses: docker/build-push-action@v2
+#        with:
+#          context: .
+#          file: ./Dockerfile
+#          platforms: linux/arm/v7
+#          push: true
+#          tags: |
+#            ghcr.io/truncj/thermos:latest
