@@ -1,8 +1,8 @@
 FROM python:3.7-slim
 
-RUN apk add gcc libc-dev make git libffi-dev openssl-dev python3-dev libxml2-dev libxslt-dev
+COPY Pipfile Pipfile.lock ./
+RUN pip install pipenv
 
-ADD main.py devices.py requirements.txt ./
-RUN pip install -r requirements.txt
+ADD main.py devices.py
 CMD [ "python", "-u", "main.py"]
 
