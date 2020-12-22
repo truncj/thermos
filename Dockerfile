@@ -1,4 +1,4 @@
-FROM python:3.7-alpine
+FROM python:3.7-slim
 
 RUN apk add gcc libc-dev make git libffi-dev openssl-dev python3-dev libxml2-dev libxslt-dev
 
