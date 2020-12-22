@@ -1,5 +1,5 @@
 accessory.state
-config.json
+config/config.json
 pyvenv.cfg
 __pycache__/
 .idea/

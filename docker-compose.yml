@@ -1,0 +1,15 @@
+version: '3'
+services:
+  thermos:
+    container_name: thermos
+    image: ghcr.io/truncj/thermos:latest
+    volumes:
+      - ./config:/config
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=1
+  redis:
+    container_name: redis
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"

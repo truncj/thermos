@@ -54,7 +54,7 @@ class Thermostat(Accessory):
 
         state = json.loads(self.r.get(self.display_name))
 
-        with open('config.json') as f:
+        with open('config/config.json') as f:
             data = json.load(f)
             state['gpio_pin'] = data[self.display_name]['gpio_pin']
             state['temp_id'] = data[self.display_name]['temp_id']
