@@ -1,0 +1,10 @@
+accessory.state
+config.json
+pyvenv.cfg
+__pycache__/
+.idea/
+
+**/bin
+**/include
+**/lib
+

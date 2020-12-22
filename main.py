@@ -6,13 +6,12 @@ This is:
 """
 import logging
 import signal
-import random
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
-from pyhap.const import CATEGORY_SENSOR
-from hap import TemperatureSensor
-from hap import Thermostat
+
+from devices import TemperatureSensor
+from devices import Thermostat
 
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
 
@@ -43,8 +42,18 @@ def get_bridge(driver):
 
     tstat1 = Thermostat(driver, 'LivingRoom')
     tstat2 = Thermostat(driver, 'SunRoom')
+    tstat3 = Thermostat(driver, 'Bedrooms')
+    tstat4 = Thermostat(driver, 'MasterBedroom')
+    tstat5 = Thermostat(driver, 'Downstairs')
+    tstat6 = Thermostat(driver, 'DownstairsBedrooms')
+
     bridge.add_accessory(tstat1)
     bridge.add_accessory(tstat2)
+    bridge.add_accessory(tstat3)
+    bridge.add_accessory(tstat4)
+    bridge.add_accessory(tstat5)
+    bridge.add_accessory(tstat6)
+
 
     return bridge
 

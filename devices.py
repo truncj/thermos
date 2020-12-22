@@ -1,8 +1,10 @@
-import random
-
+import json
+import redis
 from RPi import GPIO
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_SENSOR, CATEGORY_THERMOSTAT
+
+from w1thermsensor import W1ThermSensor
 
 
 class Thermostat(Accessory):
@@ -12,9 +14,12 @@ class Thermostat(Accessory):
     def _gpio_setup(_cls, pin):
         if GPIO.getmode() is None:
             GPIO.setmode(GPIO.BCM)
+        # todo remove mock pin
+        if pin == 999:
+            return
         GPIO.setup(pin, GPIO.OUT)
 
-    def __init__(self, *args, pin=23, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Here, we just store a reference to the current temperature characteristic and
         add a method that will be executed every time its value changes.
         """
@@ -23,8 +28,8 @@ class Thermostat(Accessory):
 
         # Add the services that this Accessory will support with add_preload_service here
         temp_service = self.add_preload_service('Thermostat')
-        self.temp_current = temp_service.get_characteristic('CurrentTemperature')
-        self.temp_target = temp_service.get_characteristic('TargetTemperature')
+        self.current_temp = temp_service.get_characteristic('CurrentTemperature')
+        self.target_temp = temp_service.get_characteristic('TargetTemperature')
         self.target_state = temp_service.get_characteristic('TargetHeatingCoolingState')
         # self.current_state = temp_service.get_characteristic('CurrentHeatingCoolingState')
 
@@ -32,57 +37,119 @@ class Thermostat(Accessory):
         temp_service.configure_char('TemperatureDisplayUnits', value=1)
 
         # Having a callback is optional, but you can use it to add functionality.
-        self.temp_target.setter_callback = self.temperature_target_changed
-        self.temp_current.setter_callback = self.temperature_current_changed
+        self.target_temp.setter_callback = self.target_temp_changed
+        self.current_temp.setter_callback = self.current_temp_changed
         self.target_state.setter_callback = self.target_state_changed
         # self.current_state.setter_callback = self.current_state_changed
 
-        self.pin = pin
-        self._gpio_setup(pin)
+        # initialize redis connection per device
+        self.r = redis.Redis(
+            host='192.168.1.236',
+            port=6379,
+            password='',
+            decode_responses=True)
+
+        if not self.r.exists(self.display_name):
+            self.r.set(self.display_name, '{}')
+
+        state = json.loads(self.r.get(self.display_name))
+
+        with open('config.json') as f:
+            data = json.load(f)
+            state['gpio_pin'] = data[self.display_name]['gpio_pin']
+            state['temp_id'] = data[self.display_name]['temp_id']
+
+        # initialize gpio
+        self.pin = state['gpio_pin']
+        self._gpio_setup(self.pin)
+
+        # sane defaults for target temp if doesn't already exist
+        state['target_temp'] = state.get('target_temp', 70)
+        self.target_temp.set_value(state['target_temp'])
+
+        # sane defaults for target state if doesn't already exist
+        state['target_state'] = state.get('target_state', 0)
+        self.target_state.set_value(state['target_state'])
+
+        self.r.set(self.display_name, json.dumps(state))
 
     def target_state_changed(self, value):
         """This will be called every time the value of the CurrentTemperature
         is changed. Use setter_callbacks to react to user actions, e.g. setting the
         lights On could fire some GPIO code to turn on a LED (see pyhap/accessories/LightBulb.py).
         """
-        # if state is turned to 'OFF'
-        if value == 0:
-            GPIO.output(self.pin, GPIO.LOW)
-        elif value == 1:
-            GPIO.output(self.pin, GPIO.HIGH)
-        else:
-            GPIO.output(self.pin, GPIO.LOW)
+
+        # get existing target_state
+        json_state = json.loads(self.r.get(self.display_name))
+
+        # set new target_state
+        json_state['target_state'] = value
+        self.r.set(self.display_name, json.dumps(json_state))
 
         print('Target State changed to: ', value)
 
-    # def current_state_changed(self, value):
-    #   print('Current State changed to: ', value)
+    def target_temp_changed(self, value):
+        # self.temp_target.set_value(value)
 
-    def temperature_target_changed(self, value):
-        """This will be called every time the value of the CurrentTemperature
-        is changed. Use setter_callbacks to react to user actions, e.g. setting the
-        lights On could fire some GPIO code to turn on a LED (see pyhap/accessories/LightBulb.py).
-        """
+        # get existing target_temp
+        json_state = json.loads(self.r.get(self.display_name))
+
+        # set new target_temp
+        json_state['target_temp'] = value
+        self.r.set(self.display_name, json.dumps(json_state))
         print('Temperature [TARGET] changed to: ', value)
 
-    def temperature_current_changed(self, value):
+    def current_temp_changed(self, value):
         """This will be called every time the value of the CurrentTemperature
         is changed. Use setter_callbacks to react to user actions, e.g. setting the
         lights On could fire some GPIO code to turn on a LED (see pyhap/accessories/LightBulb.py).
         """
         print('Temperature [CURRENT] changed to: ', value)
 
-    @Accessory.run_at_interval(3)  # Run this method every 3 seconds
+    @Accessory.run_at_interval(2)  # Run this method every 3 seconds
     # The `run` method can be `async` as well
-    def run(self):
+    async def run(self):
         """We override this method to implement what the accessory will do when it is
         started.
 
         We set the current temperature to a random number. The decorator runs this method
         every 3 seconds.
         """
-        self.temp_current.set_value(random.randint(20, 30))
-        # self.temp_target.set_value(random.randint(22, 28))
+        sensor = W1ThermSensor()
+        sensors = sensor.get_available_sensors()
+
+        for _ in sensors:
+
+            data = json.loads(self.r.get(self.display_name))
+
+            # todo remove once we have more than one thermometer
+            if data['temp_id'] == 'XXXXXXXXXXX':
+                fake_temp = 21
+                self.current_temp.set_value(fake_temp)
+                # check if heat should be turned based on 0.5C threshold
+                # todo remove mock pin
+                if self.pin == 999:
+                    return
+                if (self.target_temp.value - fake_temp > 0.5)\
+                        and self.target_state.value == 1:
+                    GPIO.output(self.pin, GPIO.HIGH)
+                else:
+                    GPIO.output(self.pin, GPIO.LOW)
+            else:
+
+                if sensor.id == data['temp_id']:
+                    self.current_temp.set_value(sensor.get_temperature())
+
+                    # check if heat should be turned based on 0.5C threshold
+                    if (self.target_temp.value - sensor.get_temperature() > 0.5)\
+                            and self.target_state.value == 1:
+                        GPIO.output(self.pin, GPIO.HIGH)
+                    else:
+                        GPIO.output(self.pin, GPIO.LOW)
+
+            print(self.display_name)
+            print('Current Temperature: ', self.current_temp.value)
+            print('Target Temperature: ', self.target_temp.value)
 
     # The `stop` method can be `async` as well
     def stop(self):
@@ -127,7 +194,8 @@ class TemperatureSensor(Accessory):
         We set the current temperature to a random number. The decorator runs this method
         every 3 seconds.
         """
-        self.temp_char.set_value(random.randint(18, 26))
+        self.temp_char.set_value(20)
+        # self.temp_char.set_value(random.randint(18, 26))
 
     # The `stop` method can be `async` as well
     def stop(self):
