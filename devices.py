@@ -5,7 +5,6 @@ import redis
 from RPi import GPIO
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_SENSOR, CATEGORY_THERMOSTAT
-
 from w1thermsensor import W1ThermSensor
 
 
@@ -20,6 +19,7 @@ class Thermostat(Accessory):
         if relay_pin == 999:
             return
         GPIO.setup(relay_pin, GPIO.OUT)
+        # set internal pullup resistor on temp sensor GPIO (~50k ohms)
         GPIO.setup(temp_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def __init__(self, *args, **kwargs):
