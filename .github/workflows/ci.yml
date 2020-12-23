@@ -32,12 +32,9 @@ jobs:
           docker push ghcr.io/truncj/thermos:${{ github.sha }}
           docker push ghcr.io/truncj/thermos:latest
 
-#        name: Build and push
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: .
-#          file: ./Dockerfile
-#          platforms: linux/arm/v7
-#          push: true
-#          tags: |
-#            ghcr.io/truncj/thermos:latest
+      -
+        name: Deploy
+        run: |
+          docker-compose pull
+          docker-compose up -d
+        working-directory: /home/pi/Projects/thermos
