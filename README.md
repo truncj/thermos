@@ -11,3 +11,4 @@ Benefits:
 
 ![thermos architecture](images/thermos_architecture.png)
 
+![img.png](images/thermos_architecture.png)
