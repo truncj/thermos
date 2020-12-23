@@ -141,12 +141,16 @@ class Thermostat(Accessory):
                 else:
                     GPIO.output(self.relay_pin, GPIO.LOW)
             else:
-
                 if sensor.id == data['temp_id']:
-                    self.current_temp.set_value(sensor.get_temperature())
+                    try:
+                        self.current_temp.set_value(sensor.get_temperature())
+                    except IndexError as error:
+                        logging.error(f'{self.display_name} temperature sensor is unavailable - {error}')
+                    except Exception as exception:
+                        logging.error(f'{self.display_name} - {exception}')
 
                     # check if heat should be turned based on 0.5C threshold
-                    if (self.target_temp.value - sensor.get_temperature() > 0.5)\
+                    if (self.target_temp.value - self.current_temp.value > 0.5)\
                             and self.target_state.value == 1:
                         GPIO.output(self.relay_pin, GPIO.HIGH)
                     else:
