@@ -16,29 +16,9 @@ from devices import Thermostat
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
 
 
-# class TemperatureSensor(Accessory):
-#     """Fake Temperature sensor, measuring every 3 seconds."""
-#
-#     category = CATEGORY_SENSOR
-#
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#
-#         serv_temp = self.add_preload_service('TemperatureSensor')
-#         self.char_temp = serv_temp.configure_char('CurrentTemperature')
-#
-#     @Accessory.run_at_interval(3)
-#     async def run(self):
-#         self.char_temp.set_value(random.randint(18, 26))
-
-
 def get_bridge(driver):
     """Call this method to get a Bridge instead of a standalone accessory."""
     bridge = Bridge(driver, 'Bridge')
-    # temp_sensor = TemperatureSensor(driver, 'Sensor 2')
-    # temp_sensor2 = TemperatureSensor(driver, 'Sensor 1')
-    # bridge.add_accessory(temp_sensor)
-    # bridge.add_accessory(temp_sensor2)
 
     tstat1 = Thermostat(driver, 'LivingRoom')
     tstat2 = Thermostat(driver, 'SunRoom')
@@ -53,7 +33,6 @@ def get_bridge(driver):
     bridge.add_accessory(tstat4)
     bridge.add_accessory(tstat5)
     bridge.add_accessory(tstat6)
-
 
     return bridge
 

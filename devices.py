@@ -11,13 +11,14 @@ class Thermostat(Accessory):
     category = CATEGORY_THERMOSTAT  # This is for the icon in the iOS Home app.
 
     @classmethod
-    def _gpio_setup(_cls, pin):
+    def _gpio_setup(_cls, relay_pin, temp_pin):
         if GPIO.getmode() is None:
             GPIO.setmode(GPIO.BCM)
         # todo remove mock pin
-        if pin == 999:
+        if relay_pin == 999:
             return
-        GPIO.setup(pin, GPIO.OUT)
+        GPIO.setup(relay_pin, GPIO.OUT)
+        GPIO.setup(temp_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def __init__(self, *args, **kwargs):
         """Here, we just store a reference to the current temperature characteristic and
@@ -56,12 +57,14 @@ class Thermostat(Accessory):
 
         with open('config/config.json') as f:
             data = json.load(f)
-            state['gpio_pin'] = data[self.display_name]['gpio_pin']
+            state['relay_pin'] = data[self.display_name]['relay_pin']
+            state['temp_pin'] = data[self.display_name]['temp_pin']
             state['temp_id'] = data[self.display_name]['temp_id']
 
         # initialize gpio
-        self.pin = state['gpio_pin']
-        self._gpio_setup(self.pin)
+        self.relay_pin = state['relay_pin']
+        self.temp_pin = state['temp_pin']
+        self._gpio_setup(self.relay_pin, self.temp_pin)
 
         # sane defaults for target temp if doesn't already exist
         state['target_temp'] = state.get('target_temp', 70)
