@@ -6,7 +6,7 @@ services:
     restart: always
     privileged: true
     volumes:
-      - ./config:/config
+      - ./config:/app/config
     environment:
       - PYTHONUNBUFFERED=1
       - DEBUG=1
