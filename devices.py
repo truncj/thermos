@@ -1,4 +1,6 @@
 import json
+import logging
+
 import redis
 from RPi import GPIO
 from pyhap.accessory import Accessory
@@ -150,9 +152,12 @@ class Thermostat(Accessory):
                     else:
                         GPIO.output(self.relay_pin, GPIO.LOW)
 
-            print(self.display_name)
-            print('Current Temperature: ', self.current_temp.value)
-            print('Target Temperature: ', self.target_temp.value)
+            # to fahrenheit
+            d = u"\u00b0"
+            cf = round(9.0/5.0 * self.current_temp.value + 32, 2)
+            tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
+
+            logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F)')
 
     # The `stop` method can be `async` as well
     def stop(self):
