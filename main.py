@@ -13,7 +13,7 @@ from pyhap.accessory_driver import AccessoryDriver
 from devices import TemperatureSensor
 from devices import Thermostat
 
-logging.basicConfig(level=logging.INFO, format="[%(module)s] %(message)s")
+logging.basicConfig(level=logging.INFO, format="[%(module)s] %(asctime)ss %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def get_bridge(driver):
@@ -42,7 +42,7 @@ def get_accessory(driver):
     return TemperatureSensor(driver, 'MyTempSensor')
 
 
-# Start the accessory on port 51826
+# Start the accessory on port 51826 & save the accessory.state to our custom path
 driver = AccessoryDriver(port=51826, persist_file='./config/accessory.state')
 
 # Change `get_accessory` to `get_bridge` if you want to run a Bridge.
