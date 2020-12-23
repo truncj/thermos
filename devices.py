@@ -131,13 +131,13 @@ class Thermostat(Accessory):
                 self.current_temp.set_value(fake_temp)
                 # check if heat should be turned based on 0.5C threshold
                 # todo remove mock pin
-                if self.pin == 999:
+                if self.relay_pin == 999:
                     return
                 if (self.target_temp.value - fake_temp > 0.5)\
                         and self.target_state.value == 1:
-                    GPIO.output(self.pin, GPIO.HIGH)
+                    GPIO.output(self.relay_pin, GPIO.HIGH)
                 else:
-                    GPIO.output(self.pin, GPIO.LOW)
+                    GPIO.output(self.relay_pin, GPIO.LOW)
             else:
 
                 if sensor.id == data['temp_id']:
@@ -146,9 +146,9 @@ class Thermostat(Accessory):
                     # check if heat should be turned based on 0.5C threshold
                     if (self.target_temp.value - sensor.get_temperature() > 0.5)\
                             and self.target_state.value == 1:
-                        GPIO.output(self.pin, GPIO.HIGH)
+                        GPIO.output(self.relay_pin, GPIO.HIGH)
                     else:
-                        GPIO.output(self.pin, GPIO.LOW)
+                        GPIO.output(self.relay_pin, GPIO.LOW)
 
             print(self.display_name)
             print('Current Temperature: ', self.current_temp.value)
