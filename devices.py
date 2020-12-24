@@ -120,10 +120,9 @@ class Thermostat(Accessory):
         We set the current temperature to a random number. The decorator runs this method
         every 3 seconds.
         """
-        sensor = W1ThermSensor()
-        sensors = sensor.get_available_sensors()
+        sensors = W1ThermSensor().get_available_sensors()
 
-        for _ in sensors:
+        for sensor in sensors:
 
             data = json.loads(self.r.get(self.display_name))
 
@@ -156,12 +155,12 @@ class Thermostat(Accessory):
                     else:
                         GPIO.output(self.relay_pin, GPIO.LOW)
 
-            # to fahrenheit
-            d = u"\u00b0"
-            cf = round(9.0/5.0 * self.current_temp.value + 32, 2)
-            tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
+                    # to fahrenheit
+                    d = u"\u00b0"
+                    cf = round(9.0/5.0 * self.current_temp.value + 32, 2)
+                    tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
 
-            logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F)')
+                    logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F)')
 
     # The `stop` method can be `async` as well
     def stop(self):
