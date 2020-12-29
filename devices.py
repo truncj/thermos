@@ -9,6 +9,11 @@ from w1thermsensor import W1ThermSensor
 from prometheus_client import Gauge
 
 
+# initialize prometheus metrics gauges
+current_temp_gauge = Gauge(f"current_temperature", "Temperature in F", labelnames=["room"])
+target_temp_gauge = Gauge(f"target_temperature", "Temperature in F", labelnames=["room"])
+
+
 class Thermostat(Accessory):
     category = CATEGORY_THERMOSTAT  # This is for the icon in the iOS Home app.
 
@@ -40,9 +45,10 @@ class Thermostat(Accessory):
         # Default unit to Fahrenheit (change to 0 for Celcius)
         temp_service.configure_char('TemperatureDisplayUnits', value=1)
 
-        # Initialize gauge for prometheus
-        self.current_temp_gauge = Gauge(f"{self.display_name}_current_temperature", "Temperature in F")
-        self.target_temp_gauge = Gauge(f"{self.display_name}_target_temperature", "Temperature in F")
+        # if self.current_temp_gauge is not None:
+        # # Initialize gauge for prometheus
+        # self.current_temp_gauge = Gauge(f"current_temperature", "Temperature in F")
+        # self.target_temp_gauge = Gauge(f"target_temperature", "Temperature in F")
 
         # Having a callback is optional, but you can use it to add functionality.
         self.target_temp.setter_callback = self.target_temp_changed
@@ -165,9 +171,9 @@ class Thermostat(Accessory):
                     cf = round(9.0/5.0 * self.current_temp.value + 32, 2)
                     tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
 
-                    # set metrics for prometheus
-                    self.current_temp_gauge.set(cf)
-                    self.target_temp_gauge.set(tf)
+                    # set metric values for prometheus
+                    current_temp_gauge.labels(room=self.display_name).set(cf)
+                    target_temp_gauge.labels(room=self.display_name).set(tf)
 
                     logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F)')
 

@@ -20,16 +20,20 @@ services:
       - ./redis-data:/data
     network_mode: host
   grafana:
+    container_name: grafana
     image: grafana/grafana
     ports:
       - '3000:3000'
     volumes:
       - ./grafana-storage:/var/lib/grafana
+    network_mode: host
   prometheus:
-    image: prom/prometheus
+    container_name: prometheus
+    image: prom/prometheus-linux-armv7
     ports:
       - '9090:9090'
     volumes:
       - ./prometheus-config/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus:/prometheus
+    network_mode: host
 
