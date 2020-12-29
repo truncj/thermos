@@ -7,7 +7,9 @@ This is:
 import logging
 import signal
 
-from pyhap.accessory import Accessory, Bridge
+from prometheus_client import Gauge, start_http_server
+
+from pyhap.accessory import Bridge
 from pyhap.accessory_driver import AccessoryDriver
 
 from devices import TemperatureSensor
@@ -43,7 +45,7 @@ def get_accessory(driver):
 
 
 # Start the accessory on port 51826 & save the accessory.state to our custom path
-driver = AccessoryDriver(port=51826, persist_file='./config/accessory.state')
+driver = AccessoryDriver(port=51827, persist_file='./config/accessory.state')
 
 # Change `get_accessory` to `get_bridge` if you want to run a Bridge.
 driver.add_accessory(accessory=get_bridge(driver))
@@ -51,6 +53,9 @@ driver.add_accessory(accessory=get_bridge(driver))
 # We want SIGTERM (terminate) to be handled by the driver itself,
 # so that it can gracefully stop the accessory, server and advertising.
 signal.signal(signal.SIGTERM, driver.signal_handler)
+
+# Expose metrics
+start_http_server(8080)
 
 # Start it!
 driver.start()

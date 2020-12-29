@@ -6,6 +6,7 @@ from RPi import GPIO
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_SENSOR, CATEGORY_THERMOSTAT
 from w1thermsensor import W1ThermSensor
+from prometheus_client import Gauge
 
 
 class Thermostat(Accessory):
@@ -38,6 +39,10 @@ class Thermostat(Accessory):
 
         # Default unit to Fahrenheit (change to 0 for Celcius)
         temp_service.configure_char('TemperatureDisplayUnits', value=1)
+
+        # Initialize gauge for prometheus
+        self.current_temp_gauge = Gauge(f"{self.display_name}_current_temperature", "Temperature in F")
+        self.target_temp_gauge = Gauge(f"{self.display_name}_target_temperature", "Temperature in F")
 
         # Having a callback is optional, but you can use it to add functionality.
         self.target_temp.setter_callback = self.target_temp_changed
@@ -159,6 +164,10 @@ class Thermostat(Accessory):
                     d = u"\u00b0"
                     cf = round(9.0/5.0 * self.current_temp.value + 32, 2)
                     tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
+
+                    # set metrics for prometheus
+                    self.current_temp_gauge.set(cf)
+                    self.target_temp_gauge.set(tf)
 
                     logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F)')
 
