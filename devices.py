@@ -137,45 +137,33 @@ class Thermostat(Accessory):
 
             data = json.loads(self.r.get(self.display_name))
 
-            # todo remove once we have more than one thermometer
-            if data['temp_id'] == 'XXXXXXXXXXX':
-                fake_temp = 21
-                self.current_temp.set_value(fake_temp)
-                # check if heat should be turned based on 0.5C threshold
-                # todo remove mock pin
-                if self.relay_pin == 999:
+            if sensor.id == data['temp_id']:
+                try:
+                    self.current_temp.set_value(sensor.get_temperature())
+                except IndexError as error:
+                    logging.error(f'{self.display_name} temperature sensor is unavailable - {error}')
                     return
-                if (self.target_temp.value - fake_temp > 0.5)\
+                except Exception as exception:
+                    logging.error(f'{self.display_name} - {exception}')
+                    return
+
+                # check if heat should be turned based on 1C threshold
+                if (self.target_temp.value - self.current_temp.value > 1)\
                         and self.target_state.value == 1:
                     GPIO.output(self.relay_pin, GPIO.HIGH)
                 else:
                     GPIO.output(self.relay_pin, GPIO.LOW)
-            else:
-                if sensor.id == data['temp_id']:
-                    try:
-                        self.current_temp.set_value(sensor.get_temperature())
-                    except IndexError as error:
-                        logging.error(f'{self.display_name} temperature sensor is unavailable - {error}')
-                    except Exception as exception:
-                        logging.error(f'{self.display_name} - {exception}')
 
-                    # check if heat should be turned based on 0.5C threshold
-                    if (self.target_temp.value - self.current_temp.value > 0.5)\
-                            and self.target_state.value == 1:
-                        GPIO.output(self.relay_pin, GPIO.HIGH)
-                    else:
-                        GPIO.output(self.relay_pin, GPIO.LOW)
+                # to fahrenheit
+                d = u"\u00b0"
+                cf = round(9.0/5.0 * self.current_temp.value + 32, 2)
+                tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
 
-                    # to fahrenheit
-                    d = u"\u00b0"
-                    cf = round(9.0/5.0 * self.current_temp.value + 32, 2)
-                    tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
+                # set metric values for prometheus
+                current_temp_gauge.labels(room=self.display_name).set(cf)
+                target_temp_gauge.labels(room=self.display_name).set(tf)
 
-                    # set metric values for prometheus
-                    current_temp_gauge.labels(room=self.display_name).set(cf)
-                    target_temp_gauge.labels(room=self.display_name).set(tf)
-
-                    logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F)')
+                logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F)')
 
     # The `stop` method can be `async` as well
     def stop(self):

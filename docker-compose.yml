@@ -22,6 +22,7 @@ services:
   grafana:
     container_name: grafana
     image: grafana/grafana
+    restart: always
     ports:
       - '3000:3000'
     volumes:
@@ -30,6 +31,7 @@ services:
   prometheus:
     container_name: prometheus
     image: prom/prometheus-linux-armv7
+    restart: always
     ports:
       - '9090:9090'
     volumes:
