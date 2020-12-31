@@ -147,8 +147,8 @@ class Thermostat(Accessory):
                     logging.error(f'{self.display_name} - {exception}')
                     return
 
-                # check if heat should be turned based on 1C threshold
-                if (self.target_temp.value - self.current_temp.value > 1)\
+                # check if heat should be turned based on 0.5C threshold
+                if (self.target_temp.value - self.current_temp.value > 0.5)\
                         and self.target_state.value == 1:
                     GPIO.output(self.relay_pin, GPIO.HIGH)
                 else:
