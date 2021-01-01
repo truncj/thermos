@@ -26,8 +26,8 @@ class Thermostat(Accessory):
             return
         GPIO.setup(relay_pin, GPIO.IN)
         GPIO.setup(relay_pin, GPIO.OUT)
-        # set internal pullup resistor on temp sensor GPIO (~50k ohms)
-        # GPIO.setup(temp_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        # set internal pullup resistor on temp sensor GPIO (~50k ohms) - value: GPIO.PUD_UP
+        GPIO.setup(temp_pin, GPIO.IN, pull_up_down=GPIO.PUD_OFF)
 
     def __init__(self, *args, **kwargs):
         """Here, we just store a reference to the current temperature characteristic and
