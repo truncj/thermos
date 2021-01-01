@@ -24,9 +24,15 @@ class Thermostat(Accessory):
         # todo remove mock pin
         if relay_pin == 999:
             return
+
+        # setup an input relay pin so I can check the status
         GPIO.setup(relay_pin, GPIO.IN)
+
+        # setup an output relay pin so I can set the status
         GPIO.setup(relay_pin, GPIO.OUT)
-        # set internal pullup resistor on temp sensor GPIO (~50k ohms) - value: GPIO.PUD_UP
+
+        # old: set internal pullup resistor on temp sensor GPIO (~50k ohms) - value: GPIO.PUD_UP
+        # new: disable internal pull up
         GPIO.setup(temp_pin, GPIO.IN, pull_up_down=GPIO.PUD_OFF)
 
     def __init__(self, *args, **kwargs):
@@ -85,6 +91,8 @@ class Thermostat(Accessory):
 
         self.r.set(self.display_name, json.dumps(state))
 
+        self.prev_status = ''
+
     def target_state_changed(self, value):
         """This will be called every time the value of the CurrentTemperature
         is changed. Use setter_callbacks to react to user actions, e.g. setting the
@@ -118,7 +126,7 @@ class Thermostat(Accessory):
         """
         print('Temperature [CURRENT] changed to: ', value)
 
-    @Accessory.run_at_interval(2)  # Run this method every 3 seconds
+    @Accessory.run_at_interval(3)  # Run this method every 3 seconds
     # The `run` method can be `async` as well
     async def run(self):
         """We override this method to implement what the accessory will do when it is
@@ -143,16 +151,8 @@ class Thermostat(Accessory):
                     logging.error(f'{self.display_name} - {exception}')
                     return
 
-                # check if heat should be turned based on 0.5C threshold
-                # curr 70
-                # target 72
-
-                #70-72 = -2
-                #72-72 = 0
-                #73-72 = 1 # gpio high until 1 then low
-                #71-72 = -1 # gpio high once -1 until 1
-
                 status = ''
+
                 # check that we want heat
                 if self.target_state.value == 1:
                     # if heat relay is already on, check if above threshold
@@ -170,12 +170,10 @@ class Thermostat(Accessory):
                             status = 'HEAT OFF - TEMP IS BELOW BOTTOM THRESHOLD, TURNING ON'
                             GPIO.output(self.relay_pin, GPIO.HIGH)
 
-                # TODO replace old logic
-                # if (self.target_temp.value - self.current_temp.value > 0.5)\
-                #         and self.target_state.value == 1:
-                #     GPIO.output(self.relay_pin, GPIO.HIGH)
-                # else:
-                #     GPIO.output(self.relay_pin, GPIO.LOW)
+                if status == self.prev_status:
+                    status = ''
+                else:
+                    self.prev_status = status
 
                 # to fahrenheit
                 d = u"\u00b0"
