@@ -169,6 +169,10 @@ class Thermostat(Accessory):
                         if self.current_temp.value - self.target_temp.value <= 0.5:
                             status = 'HEAT OFF - TEMP IS BELOW BOTTOM THRESHOLD, TURNING ON'
                             GPIO.output(self.relay_pin, GPIO.HIGH)
+                else:
+                    # turn off heat
+                    status = 'HEAT OFF'
+                    GPIO.output(self.relay_pin, GPIO.LOW)
 
                 if status == self.prev_status:
                     status = ''
