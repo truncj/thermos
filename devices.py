@@ -10,8 +10,8 @@ from prometheus_client import Gauge
 
 
 # initialize prometheus metrics gauges
-current_temp_gauge = Gauge(f"current_temperature", "Temperature in F", labelnames=["room"])
-target_temp_gauge = Gauge(f"target_temperature", "Temperature in F", labelnames=["room"])
+current_temp_gauge = Gauge(f"current_temperature", "Temperature in F", labelnames=["room", "heat_status"])
+target_temp_gauge = Gauge(f"target_temperature", "Temperature in F", labelnames=["room", "heat_status"])
 heat_status_gauge = Gauge(f"heat_status", "Heat On/Off Status", labelnames=["room"])
 
 
@@ -188,8 +188,8 @@ class Thermostat(Accessory):
                 tf = round(9.0/5.0 * self.target_temp.value + 32, 2)
 
                 # set metric values for prometheus
-                current_temp_gauge.labels(room=self.display_name).set(cf)
-                target_temp_gauge.labels(room=self.display_name).set(tf)
+                current_temp_gauge.labels(room=self.display_name, heat_status=self.target_state.value).set(cf)
+                target_temp_gauge.labels(room=self.display_name, heat_status=self.target_state.value).set(tf)
                 heat_status_gauge.labels(room=self.display_name).set(self.target_state.value)
 
                 logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F) {status}')
