@@ -188,7 +188,7 @@ class Thermostat(Accessory):
 
                 # set metric values for prometheus
                 current_temp_gauge.labels(room=self.display_name).set(cf)
-                target_temp_gauge.labels(room=self.display_name, heat_status=self.target_state).set(tf)
+                target_temp_gauge.labels(room=self.display_name, heat_status=self.target_state.value).set(tf)
 
                 logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F) {status}')
 
