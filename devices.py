@@ -167,7 +167,7 @@ class Thermostat(Accessory):
                             GPIO.output(self.relay_pin, GPIO.HIGH)
                     # if heat relay is not already on, check if below threshold
                     elif not GPIO.input(self.relay_pin):
-                        if self.current_temp.value - self.target_temp.value <= 0.5:
+                        if self.current_temp.value - self.target_temp.value <= -0.5:
                             status = 'HEAT OFF - TEMP IS BELOW BOTTOM THRESHOLD, TURNING ON'
                             GPIO.output(self.relay_pin, GPIO.HIGH)
                         else:
