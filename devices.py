@@ -5,7 +5,7 @@ import redis
 from RPi import GPIO
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_SENSOR, CATEGORY_THERMOSTAT
-from w1thermsensor import W1ThermSensor
+from w1thermsensor import W1ThermSensor, NoSensorFoundError
 from prometheus_client import Gauge
 
 
@@ -136,7 +136,12 @@ class Thermostat(Accessory):
         We set the current temperature to a random number. The decorator runs this method
         every 3 seconds.
         """
-        sensors = W1ThermSensor().get_available_sensors()
+        try:
+            sensors = W1ThermSensor().get_available_sensors()
+        except NoSensorFoundError:
+            # attempt to solve "Task exception was never retrieved" and "w1thermsensor.errors.NoSensorFoundError"
+            logging.error('NoSensorFoundError')
+            return
 
         for sensor in sensors:
 
