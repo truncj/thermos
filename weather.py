@@ -11,11 +11,6 @@ def get_weather(device, url):
     fmt = "%d-%m-%Y %H:%M:%S"
     now = dt.now().strftime(fmt)
 
-    data = {
-        "weather_ts": 0,
-        "outdoor_temp": 0
-    }
-
     if not device.r.exists('_aux'):
         device.r.set('_aux', {})
 
