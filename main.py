@@ -45,7 +45,7 @@ def get_accessory(driver):
 
 
 # Start the accessory on port 51826 & save the accessory.state to our custom path
-driver = AccessoryDriver(port=51827, persist_file='./config/accessory.state')
+driver = AccessoryDriver(port=51826, persist_file='./config/accessory.state')
 
 # Change `get_accessory` to `get_bridge` if you want to run a Bridge.
 driver.add_accessory(accessory=get_bridge(driver))
@@ -55,7 +55,7 @@ driver.add_accessory(accessory=get_bridge(driver))
 signal.signal(signal.SIGTERM, driver.signal_handler)
 
 # Expose metrics
-start_http_server(8081)
+start_http_server(8080)
 
 # Start it!
 driver.start()
