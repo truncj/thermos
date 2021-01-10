@@ -3,8 +3,8 @@ import logging
 import requests
 from datetime import datetime, timedelta
 
-# TODO clean-up
 
+# TODO clean-up
 # using weather.gov api for weather data
 def get_weather(device, url):
 
