@@ -17,12 +17,12 @@ def get_weather(device, url):
     }
 
     if not device.r.exists('_aux'):
-        device.r.set('_aux', f'{json.dumps(data)}')
+        device.r.set('_aux', {})
 
     aux_json = json.loads(device.r.get('_aux'))
 
-    if aux_json['weather_ts'] == 0 or \
-       aux_json['outdoor_temp'] == 0 or \
+    if 'weather_ts' not in aux_json or \
+       'outdoor_temp' not in aux_json or \
        dt.strptime(now, fmt) - dt.strptime(aux_json['weather_ts'], fmt) > timedelta(minutes=5):
 
         try:
