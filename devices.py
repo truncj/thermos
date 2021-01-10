@@ -8,11 +8,14 @@ from pyhap.const import CATEGORY_SENSOR, CATEGORY_THERMOSTAT
 from w1thermsensor import W1ThermSensor, NoSensorFoundError
 from prometheus_client import Gauge
 
+import weather
+
 
 # initialize prometheus metrics gauges
 current_temp_gauge = Gauge(f"current_temperature", "Temperature in F", labelnames=["room", "heat_status"])
 target_temp_gauge = Gauge(f"target_temperature", "Temperature in F", labelnames=["room", "heat_status"])
 heat_status_gauge = Gauge(f"heat_status", "Heat On/Off Status", labelnames=["room"])
+outdoor_temp_gauge = Gauge(f"outdoor_temp", "Outdoor Temperature in F")
 
 
 class Thermostat(Accessory):
@@ -76,6 +79,7 @@ class Thermostat(Accessory):
             state['relay_pin'] = data[self.display_name]['relay_pin']
             state['temp_pin'] = data[self.display_name]['temp_pin']
             state['temp_id'] = data[self.display_name]['temp_id']
+            weather_url = data['aux']['weather_url']
 
         # initialize gpio
         self.relay_pin = state['relay_pin']
@@ -93,6 +97,7 @@ class Thermostat(Accessory):
         self.r.set(self.display_name, json.dumps(state))
 
         self.prev_status = ''
+        self.weather_url = weather_url
 
     def target_state_changed(self, value):
         """This will be called every time the value of the CurrentTemperature
@@ -127,7 +132,8 @@ class Thermostat(Accessory):
         """
         print('Temperature [CURRENT] changed to: ', value)
 
-    @Accessory.run_at_interval(3)  # Run this method every 3 seconds
+    @Accessory.run_at_interval(3)
+    # Run this method every 3 seconds
     # The `run` method can be `async` as well
     async def run(self):
         """We override this method to implement what the accessory will do when it is
@@ -196,6 +202,7 @@ class Thermostat(Accessory):
                 current_temp_gauge.labels(room=self.display_name, heat_status=self.target_state.value).set(cf)
                 target_temp_gauge.labels(room=self.display_name, heat_status=self.target_state.value).set(tf)
                 heat_status_gauge.labels(room=self.display_name).set(GPIO.input(self.relay_pin))
+                outdoor_temp_gauge.set(weather.get_weather(self, self.weather_url))
 
                 logging.info(f'{self.display_name} (Current:{cf}{d}F Target:{tf}{d}F) {status}')
 
