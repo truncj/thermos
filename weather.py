@@ -1,7 +1,7 @@
 import json
 import logging
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime as dt, timedelta
 
 
 # TODO clean-up
@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 def get_weather(device, url):
 
     fmt = "%d-%m-%Y %H:%M:%S"
-    now = datetime.now().strftime(fmt)
+    now = dt.now().strftime(fmt)
 
     data = {
         "weather_ts": 0,
@@ -22,7 +22,9 @@ def get_weather(device, url):
     aux_json = json.loads(device.r.get('_aux'))
 
     if aux_json['weather_ts'] == 0 or \
-            datetime.strptime(now, fmt) - datetime.strptime(aux_json['weather_ts'], fmt) > timedelta(minutes=5):
+       aux_json['outdoor_temp'] == 0 or \
+       dt.strptime(now, fmt) - dt.strptime(aux_json['weather_ts'], fmt) > timedelta(minutes=5):
+
         try:
             device.r.set('_aux', f'{{"weather_ts": "{now}"}}')
             # hourly forecast url from https://api.weather.gov/points/{lat},{long}
@@ -32,7 +34,12 @@ def get_weather(device, url):
             return
 
         resp_json = json.loads(resp.text)
-        properties = resp_json['properties']
+
+        if 'properties' in resp_json:
+            properties = resp_json['properties']
+        else:
+            logging.error('weather response "properties" is missing ')
+            return
 
         for period in properties['periods']:
             if period['number'] == 1:
