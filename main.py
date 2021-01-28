@@ -12,7 +12,6 @@ from prometheus_client import Gauge, start_http_server
 from pyhap.accessory import Bridge
 from pyhap.accessory_driver import AccessoryDriver
 
-from devices import TemperatureSensor
 from devices import Thermostat
 
 logging.basicConfig(level=logging.INFO, format="[%(module)s] %(asctime)ss %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
@@ -37,11 +36,6 @@ def get_bridge(driver):
     bridge.add_accessory(tstat6)
 
     return bridge
-
-
-def get_accessory(driver):
-    """Call this method to get a standalone Accessory."""
-    return TemperatureSensor(driver, 'MyTempSensor')
 
 
 # Start the accessory on port 51826 & save the accessory.state to our custom path
