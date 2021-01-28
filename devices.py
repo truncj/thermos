@@ -34,7 +34,7 @@ class Thermostat(Accessory):
 
         # old: set internal pullup resistor on temp sensor GPIO (~50k ohms) - value: GPIO.PUD_UP
         # new: disable internal pull up
-        GPIO.setup(temp_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(temp_pin, GPIO.IN, pull_up_down=GPIO.PUD_OFF)
 
     def __init__(self, *args, **kwargs):
         """Here, we just store a reference to the current temperature characteristic and
