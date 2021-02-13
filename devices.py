@@ -1,6 +1,6 @@
 import json
 import logging
-from random import random
+import random
 
 import redis
 from RPi import GPIO
