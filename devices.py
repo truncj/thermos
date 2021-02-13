@@ -127,7 +127,7 @@ class Thermostat(Accessory):
         """
         print('Temperature [CURRENT] changed to: ', value)
 
-    @Accessory.run_at_interval(3)  # Run this method every 3 seconds
+    @Accessory.run_at_interval(10)  # Run this method every n seconds
     # The `run` method can be `async` as well
     async def run(self):
         """We override this method to implement what the accessory will do when it is
