@@ -155,7 +155,7 @@ class Thermostat(Accessory):
                     logging.error(f'{self.display_name} temperature sensor is unavailable - {error}')
                     return
                 except Exception as exception:
-                    reset_error_counter.inc()
+                    reset_error_counter.labels(room=self.display_name).inc()
                     logging.error(f'{self.display_name} - {exception}')
                     return
 
