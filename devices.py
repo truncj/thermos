@@ -1,3 +1,5 @@
+import time
+
 import json
 import logging
 
@@ -13,6 +15,7 @@ from prometheus_client import Gauge, Counter
 current_temp_gauge = Gauge(f"current_temperature", "Temperature in F", labelnames=["room", "heat_status"])
 target_temp_gauge = Gauge(f"target_temperature", "Temperature in F", labelnames=["room", "heat_status"])
 heat_status_gauge = Gauge(f"heat_status", "Heat On/Off Status", labelnames=["room"])
+response_time_gauge = Gauge(f"response_time", "Temp Sensor Response Time", labelnames=["room"])
 reset_error_counter = Counter(f"reset_error_count", "Sensor Reset Errors", labelnames=["room"])
 
 
@@ -147,17 +150,25 @@ class Thermostat(Accessory):
         for sensor in sensors:
 
             data = json.loads(self.r.get(self.display_name))
+            response_time = None
 
             if sensor.id == data['temp_id']:
                 try:
+                    start = time.process_time()
                     self.current_temp.set_value(sensor.get_temperature())
+                    response_time = time.process_time() - start
                 except IndexError as error:
+                    response_time = time.process_time() - start
                     logging.error(f'{self.display_name} temperature sensor is unavailable - {error}')
                     return
                 except Exception as exception:
+                    response_time = time.process_time() - start
                     reset_error_counter.labels(room=self.display_name).inc()
                     logging.error(f'{self.display_name} - {exception}')
                     return
+
+                # response time for temperature sensor
+                response_time_gauge.labels(room=self.display_name).set(response_time)
 
                 status = ''
 
