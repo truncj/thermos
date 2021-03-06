@@ -14,7 +14,7 @@ services:
   redis:
     container_name: redis
     command: [ "redis-server", "--appendonly", "yes" ]
-    image: "redis:alpine"
+    image: "redis:6.0.12-alpine"
     restart: always
     volumes:
       - ./redis-data:/data
