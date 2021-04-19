@@ -1,0 +1,12 @@
+{
+	"LivingRoom": {
+		"relay_pin": 23,
+		"temp_pin": 4,
+		"temp_id": "00000ab123cc"
+	},
+	"Bedroom": {
+		"relay_pin": 16,
+		"temp_pin": 17,
+		"temp_id": "00000ab123dd"
+	}
+}
