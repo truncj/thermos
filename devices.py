@@ -176,8 +176,7 @@ class Thermostat(Accessory):
                         except requests.exceptions.RequestException as error:
                             # if extra_sensor fails, default to thermostat temperature sensor
                             temp = sensor.get_temperature()
-                            logging.error(f'{self.display_name} extra_sensor is unavailable \
-                            using {sensor.id} - {error}')
+                            logging.error(f'{self.display_name} extra_sensor is unavailable using {sensor.id} - {error}')
 
                     self.current_temp.set_value(temp)
 
