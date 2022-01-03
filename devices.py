@@ -1,5 +1,6 @@
 import time
 
+import requests
 import json
 import logging
 
@@ -80,19 +81,26 @@ class Thermostat(Accessory):
             state['relay_pin'] = data[self.display_name]['relay_pin']
             state['temp_pin'] = data[self.display_name]['temp_pin']
             state['temp_id'] = data[self.display_name]['temp_id']
+            # load extra_sensor url if one is defined
+            if 'extra_sensor' in data[self.display_name]:
+                state['extra_sensor'] = data[self.display_name]['extra_sensor']
 
         # initialize gpio
         self.relay_pin = state['relay_pin']
         self.temp_pin = state['temp_pin']
         self._gpio_setup(self.relay_pin, self.temp_pin)
 
-        # sane defaults for target temp if doesn't already exist
+        # sane defaults for target temp if it doesn't already exist
         state['target_temp'] = state.get('target_temp', 70)
         self.target_temp.set_value(state['target_temp'])
 
-        # sane defaults for target state if doesn't already exist
+        # sane defaults for target state if it doesn't already exist
         state['target_state'] = state.get('target_state', 0)
         self.target_state.set_value(state['target_state'])
+
+        # TODO is this needed?
+        # default to empty if no extra_sensor is defined
+        # state['extra_sensor'] = state.get('extra_sensor', '')
 
         self.r.set(self.display_name, json.dumps(state))
 
@@ -152,10 +160,27 @@ class Thermostat(Accessory):
             data = json.loads(self.r.get(self.display_name))
             response_time = None
 
+            # get temperature
             if sensor.id == data['temp_id']:
                 try:
                     start = time.process_time()
-                    self.current_temp.set_value(sensor.get_temperature())
+                    if 'extra_sensor' not in data:
+                        # use thermostat temperature sensor
+                        temp = sensor.get_temperature()
+                    else:
+                        try:
+                            resp = requests.get(data['extra_sensor'])
+                            # throw exception if non-200
+                            resp.raise_for_status()
+                            temp = resp.json()['temp_c']
+                        except requests.exceptions.RequestException as error:
+                            # if extra_sensor fails, default to thermostat temperature sensor
+                            temp = sensor.get_temperature()
+                            logging.error(f'{self.display_name} extra_sensor is unavailable \
+                            using {sensor.id} - {error}')
+
+                    self.current_temp.set_value(temp)
+
                     response_time = time.process_time() - start
                 except IndexError as error:
                     response_time = time.process_time() - start
