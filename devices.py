@@ -84,6 +84,7 @@ class Thermostat(Accessory):
             # load extra_sensor url if one is defined
             if 'extra_sensor' in data[self.display_name]:
                 state['extra_sensor'] = data[self.display_name]['extra_sensor']
+                logging.info(f"{data[self.display_name]} uses extra sensor {state['extra_sensor']}")
 
         # initialize gpio
         self.relay_pin = state['relay_pin']
@@ -97,10 +98,6 @@ class Thermostat(Accessory):
         # sane defaults for target state if it doesn't already exist
         state['target_state'] = state.get('target_state', 0)
         self.target_state.set_value(state['target_state'])
-
-        # TODO is this needed?
-        # default to empty if no extra_sensor is defined
-        # state['extra_sensor'] = state.get('extra_sensor', '')
 
         self.r.set(self.display_name, json.dumps(state))
 
