@@ -84,7 +84,7 @@ class Thermostat(Accessory):
             # load extra_sensor url if one is defined
             if 'extra_sensor' in data[self.display_name]:
                 state['extra_sensor'] = data[self.display_name]['extra_sensor']
-                logging.info(f"{data[self.display_name]} uses extra sensor {state['extra_sensor']}")
+                logging.info(f"{self.display_name} uses extra sensor {state['extra_sensor']}")
 
         # initialize gpio
         self.relay_pin = state['relay_pin']
