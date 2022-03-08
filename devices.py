@@ -27,9 +27,6 @@ class Thermostat(Accessory):
     def _gpio_setup(_cls, relay_pin, temp_pin):
         if GPIO.getmode() is None:
             GPIO.setmode(GPIO.BCM)
-        # todo remove mock pin
-        if relay_pin == 999:
-            return
 
         # setup an input relay pin so I can check the status
         GPIO.setup(relay_pin, GPIO.IN)
@@ -196,7 +193,7 @@ class Thermostat(Accessory):
                 # check that we want heat
                 if self.target_state.value == 1:
                     # if heat relay is already on, check if above threshold
-                    # if above, turn off .. if still below keep on
+                    # if above, turn off... if still below keep on
                     if GPIO.input(self.relay_pin):
                         if self.current_temp.value - self.target_temp.value >= 0.5:
                             status = 'HEAT ON - TEMP IS ABOVE TOP THRESHOLD, TURNING OFF'

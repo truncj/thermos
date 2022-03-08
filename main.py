@@ -11,6 +11,7 @@ from prometheus_client import Gauge, start_http_server
 
 from pyhap.accessory import Bridge
 from pyhap.accessory_driver import AccessoryDriver
+from RPi import GPIO
 
 from devices import Thermostat
 
@@ -43,6 +44,12 @@ driver = AccessoryDriver(port=51826, persist_file='./config/accessory.state')
 
 # Change `get_accessory` to `get_bridge` if you want to run a Bridge.
 driver.add_accessory(accessory=get_bridge(driver))
+
+# use a gpio pin (22) to power the temp sensors
+# this allows for power cycling the sensors when errors occur
+vcc_pin = 22
+GPIO.setup(vcc_pin, GPIO.OUT)
+GPIO.output(vcc_pin, GPIO.HIGH)
 
 # We want SIGTERM (terminate) to be handled by the driver itself,
 # so that it can gracefully stop the accessory, server and advertising.
