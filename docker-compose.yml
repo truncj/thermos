@@ -33,5 +33,7 @@ services:
     volumes:
       - ./prometheus-config/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus:/prometheus
+    command:
+      - '--storage.tsdb.retention.time=30d'
     network_mode: host
 
