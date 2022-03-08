@@ -177,6 +177,7 @@ class Thermostat(Accessory):
                     # If greater than 100F or less than 32F
                     # ie. read error returns -172C
                     if temp > 37 or temp < 0:
+                        logging.error(f'{self.display_name} reading out of range - power cycling')
                         GPIO.output(vcc_pin, GPIO.LOW)
                         time.sleep(1)
                         GPIO.output(vcc_pin, GPIO.HIGH)
