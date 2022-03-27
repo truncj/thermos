@@ -163,7 +163,7 @@ class Thermostat(Accessory):
                         temp = sensor.get_temperature()
                     else:
                         try:
-                            resp = requests.get(data['extra_sensor'])
+                            resp = requests.get(data['extra_sensor'], timeout=3)
                             # throw exception if non-200
                             resp.raise_for_status()
                             temp = resp.json()['temp_c']
