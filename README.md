@@ -15,3 +15,4 @@ Thermos is a HomeKit thermostat designed for multi-zone hydronic heating systems
 ## System Design
 
 ![thermos architecture](images/thermos_architecture.png)
+
