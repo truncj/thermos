@@ -2,6 +2,7 @@ version: '3'
 services:
   thermos:
     container_name: thermos
+    build: .
     image: ghcr.io/truncj/thermos:latest
     restart: always
     privileged: true

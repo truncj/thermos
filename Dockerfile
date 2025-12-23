@@ -9,7 +9,8 @@ RUN pip install -r requirements.txt
 FROM python:3.7-slim as app
 COPY --from=base /app/venv /app/venv
 WORKDIR app
-COPY main.py devices.py ./
+COPY main.py ./
+COPY thermos ./thermos
 ENV PATH="/app/venv/bin:$PATH"
 CMD [ "python", "-u", "main.py"]
 

@@ -1,62 +1,75 @@
-"""An example of how to setup and start an Accessory.
-This is:
-1. Create the Accessory object you want.
-2. Add it to an AccessoryDriver, which will advertise it on the local network,
-    setup a server to answer client queries, etc.
-"""
-import logging
 import signal
-
-from prometheus_client import Gauge, start_http_server
+import sys
+from pathlib import Path
 
 from pyhap.accessory import Bridge
 from pyhap.accessory_driver import AccessoryDriver
-from RPi import GPIO
+from prometheus_client import start_http_server
 
-from devices import Thermostat
+from thermos.utils.logging import setup_logging, get_logger
+from thermos.config.loader import load_config
+from thermos.accessories.thermostat import ThermostatAccessory
 
-logging.basicConfig(level=logging.INFO, format="[%(module)s] %(asctime)ss %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+try:
+    from RPi import GPIO
+except ImportError:
+    # Mock GPIO for non-RPi environments
+    from unittest.mock import MagicMock
+    GPIO = MagicMock()
+    GPIO.BCM = 11
+    GPIO.OUT = 0
+    GPIO.IN = 1
+    GPIO.HIGH = 1
+    GPIO.LOW = 0
 
+from thermos.core.power import SensorPower
 
-def get_bridge(driver):
-    """Call this method to get a Bridge instead of a standalone accessory."""
+def main():
+    setup_logging()
+    logger = get_logger("main")
+    
+    # Load Configuration
+    config_path = Path('./config/config.json')
+    try:
+        system_config, configs = load_config(config_path)
+    except Exception as e:
+        logger.critical(f"Failed to load configuration: {e}")
+        sys.exit(1)
+
+    # Setup Sensor Power
+    vcc_pin = system_config.vcc_pin
+    sensor_power = None
+    try:
+        sensor_power = SensorPower(vcc_pin)
+    except Exception as e:
+        logger.error(f"Failed to setup VCC pin: {e}")
+
+    # Start Prometheus Metrics
+    start_http_server(8080)
+    logger.info("Prometheus server started on port 8080")
+
+    # Start HAP Driver
+    driver = AccessoryDriver(port=51826, persist_file='./config/accessory.state')
+    
+    # Create Bridge
     bridge = Bridge(driver, 'Bridge')
+    
+    # Create and Add Accessories
+    for name, config in configs.items():
+        try:
+            accessory = ThermostatAccessory(driver, config, sensor_power)
+            bridge.add_accessory(accessory)
+            logger.info(f"Added accessory: {name}")
+        except Exception as e:
+            logger.error(f"Failed to initialize accessory {name}: {e}")
 
-    tstat1 = Thermostat(driver, 'LivingRoom')
-    tstat2 = Thermostat(driver, 'SunRoom')
-    tstat3 = Thermostat(driver, 'Bedrooms')
-    tstat4 = Thermostat(driver, 'MasterBedroom')
-    tstat5 = Thermostat(driver, 'Downstairs')
-    tstat6 = Thermostat(driver, 'DownstairsBedrooms')
+    driver.add_accessory(accessory=bridge)
 
-    bridge.add_accessory(tstat1)
-    bridge.add_accessory(tstat2)
-    bridge.add_accessory(tstat3)
-    bridge.add_accessory(tstat4)
-    bridge.add_accessory(tstat5)
-    bridge.add_accessory(tstat6)
+    # Signal Handling
+    signal.signal(signal.SIGTERM, driver.signal_handler)
+    
+    logger.info("Starting Accessory Driver")
+    driver.start()
 
-    return bridge
-
-
-# Start the accessory on port 51826 & save the accessory.state to our custom path
-driver = AccessoryDriver(port=51826, persist_file='./config/accessory.state')
-
-# Change `get_accessory` to `get_bridge` if you want to run a Bridge.
-driver.add_accessory(accessory=get_bridge(driver))
-
-# use a gpio pin (22) to power the temp sensors
-# this allows for power cycling the sensors when errors occur
-vcc_pin = 22
-GPIO.setup(vcc_pin, GPIO.OUT)
-GPIO.output(vcc_pin, GPIO.HIGH)
-
-# We want SIGTERM (terminate) to be handled by the driver itself,
-# so that it can gracefully stop the accessory, server and advertising.
-signal.signal(signal.SIGTERM, driver.signal_handler)
-
-# Expose metrics
-start_http_server(8080)
-
-# Start it!
-driver.start()
+if __name__ == "__main__":
+    main()
